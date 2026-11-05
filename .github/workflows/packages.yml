@@ -1,7 +1,8 @@
 name: Packages
 
 # Builds DEB packages for Debian 13 and RPM packages for Enterprise Linux 8/9/10
-# (built on Rocky Linux), for x86_64 and aarch64.
+# (built on Rocky Linux), for x86_64 and aarch64, with config/logs/PID files in
+# /var/lib/softether, /var/log/softether and /run/softether.
 # Packages are uploaded as workflow artifacts; when a tag is pushed they are
 # also attached to the GitHub release of that tag.
 

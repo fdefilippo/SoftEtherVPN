@@ -3,6 +3,9 @@
 # Build the DEB or RPM packages for the distribution this script runs on,
 # install them and run a smoke test.
 #
+# Config, logs and PID files go to /var/lib/softether, /var/log/softether
+# and /run/softether (FHS) instead of next to the binaries.
+#
 # usage: build-packages.sh <distro tag, e.g. debian-13 or el9> <output dir>
 #
 set -eux
@@ -20,7 +23,10 @@ cmake -S . -B build -G Ninja \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_INSTALL_PREFIX=/usr \
 	-DCPACK_GENERATOR="$GENERATOR" \
-	-DCPACK_RPM_PACKAGE_RELEASE_DIST=ON
+	-DCPACK_RPM_PACKAGE_RELEASE_DIST=ON \
+	-DSE_DBDIR=/var/lib/softether \
+	-DSE_LOGDIR=/var/log/softether \
+	-DSE_PIDDIR=/run/softether
 cmake --build build
 (cd build && cpack -G "$GENERATOR")
 
@@ -42,8 +48,10 @@ else
 fi
 
 # Smoke test of the installed packages
-ls -l /usr/lib/systemd/system/softether-vpnserver.service 2>/dev/null \
-	|| ls -l /lib/systemd/system/softether-vpnserver.service
+UNIT=$(ls /usr/lib/systemd/system/softether-vpnserver.service /lib/systemd/system/softether-vpnserver.service 2>/dev/null | head -n1)
+grep -qx 'StateDirectory=softether' "$UNIT"
+grep -qx 'LogsDirectory=softether' "$UNIT"
+grep -qx 'RuntimeDirectory=softether' "$UNIT"
 vpncmd /TOOLS /CMD Check | tee check.log
 grep -q "All checks passed" check.log
 
